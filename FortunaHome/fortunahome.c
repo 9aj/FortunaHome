@@ -35,24 +35,6 @@ volatile rectangle highlight;
 volatile int rotaryStore;
 volatile int changeState = 0;
 
-
-ISR(TIMER1_COMPA_vect) {
-
-   if(get_middle() == 1) {
-      changeState = 1;
-      toggleMenu();
-      while(changeState == 1) {
-         if(changeState == 0) {
-            break;
-         }
-      }
-   }
-
-   
-   rotaryStore = rotary;
-   
-}
-
 ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
 
 ISR(INT4_vect)
