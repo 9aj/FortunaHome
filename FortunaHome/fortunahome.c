@@ -32,9 +32,33 @@ void launchApplication();
 void blinkConfirm();
 
 volatile rectangle highlight;
+volatile int rotaryStore;
+volatile int changeState = 0;
 
 
 ISR(TIMER1_COMPA_vect) {
+
+   if(get_middle() == 1) {
+      changeState = 1;
+      toggleMenu();
+      while(changeState == 1) {
+         if(changeState == 0) {
+            break;
+         }
+      }
+   }
+
+   
+   rotaryStore = rotary;
+   
+}
+
+ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
+
+ISR(INT4_vect)
+{
+	get_rotary();
+	_delay_us(500);
 
    switch(rotary) {
       case 1: //Toggle main living room lights
@@ -72,10 +96,8 @@ ISR(TIMER1_COMPA_vect) {
          break;
       case 6: //Options
          drawHighlighter("6. Options",149);
-
          //highlight.top = 151;
          //highlight.bottom = 154;
-
          break;
    }
 }
@@ -90,30 +112,47 @@ int main(void) {
    init_rotary();
 
    set_frame_rate_hz(61);
+   EIMSK |= _BV(INT7);
    EIMSK |= _BV(INT4) | _BV(INT5);
-   TCCR1A = 0;
-	TCCR1B = _BV(WGM12);
-	TCCR1B |= _BV(CS10);
-	TIMSK1 |= _BV(OCIE1A);
-
+   //TCCR1A = 0;
+	//TCCR1B = _BV(WGM12);
+	//TCCR1B |= _BV(CS10);
+	//TIMSK1 |= _BV(OCIE1A);
    launchApplication();
 }
 
-void launchApplication() {
+void toggleMenu() {
+   clear_screen();
+   
+   fill_rectangle(highlight, display.background);
+   display_string_xy("Request Received", 100, 200);
+   _delay_ms(500);
+   clear_screen();
+   changeState = 0;
+   mainMenu();
 
+}
+
+void mainMenu() {
    display_string_xy("FortunaHome", 120, 20);
-
    display_string_xy("1. Toggle main living room lights", 60, 75);
    display_string_xy("2. Toggle living room lampshade", 60, 90);
    display_string_xy("3. Toggle outside light", 60, 105);
    display_string_xy("4. Toggle bedroom led lights", 60, 120);
    display_string_xy("5. Return total daily energy usage", 60, 135);
    display_string_xy("6. Options", 60, 150);
+}
 
+
+
+void launchApplication() {
+   mainMenu();
    for(;;){
-      OCR1A = 65535;
       sei();
-   };
+      if(get_middle() == 1) {
+         toggleMenu();
+      }
+   }
 }
 
 void blinkConfirm() {

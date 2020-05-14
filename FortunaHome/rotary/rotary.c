@@ -11,6 +11,8 @@
 #include "rotary.h"
 
 volatile int8_t rotary = 0;
+volatile int8_t middle = 0;
+volatile int8_t switchpos = 0;
 
 void init_rotary()
 {
@@ -48,11 +50,27 @@ uint8_t get_switch()
 	return PINC & (_BV(SWN) | _BV(SWE) | _BV(SWS) | _BV(SWW));
 }
 
-ISR(INT4_vect)
-{
-	get_rotary();
-	_delay_us(250);
+int8_t get_middle() {
+	if ((~PINE & _BV(PE7) && (switchpos == 0))) {
+		switchpos = 1;
+		middle = 1;
+		//_delay_is(60);
+		return 1;
+	} else { 
+		switchpos = 0;
+		middle = 0;
+		//_delay_ms(60);
+		return 0;
+	} return 0;
 }
 
-ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
+
+
+ISR(INT7_vect)
+{
+	get_middle();
+	//_delay_ms(50);
+}
+
+
 
