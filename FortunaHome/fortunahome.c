@@ -29,7 +29,11 @@
 
 void drawHighlighter(char *inputText, uint16_t y);
 void launchApplication();
-void blinkConfirm();
+void blinkConfirm(int j);
+void configureUSART();
+void printResponse(char response);
+void toggleMenu();
+void mainMenu();
 
 volatile rectangle highlight;
 volatile int rotaryStore;
@@ -45,43 +49,37 @@ ISR(INT4_vect)
    switch(rotary) {
       case 1: //Toggle main living room lights
          drawHighlighter("1. Toggle main living room lights",74);
-         //highlight.top = 76;
-         //highlight.bottom = 79;
+         UDR1 = '1';
+
          break;
       case 2: //Toggle living room lampshade
          drawHighlighter("2. Toggle living room lampshade",89);
-
-         //highlight.top = 91;
-         //highlight.bottom = 94;
-         //blinkConfirm();
+         UDR1 = '2';
          break;
       case 3: //Toggle outside light
          drawHighlighter("3. Toggle outside light",104);
-
-         //highlight.top = 106;
-         //highlight.bottom = 109;
+         UDR1 = '3';
          break;
       case 4: //Return energy usage today/cost
          drawHighlighter("4. Return energy usage",119);
-
-         //highlight.top = 121;
-         //highlight.bottom = 124;
-         //blinkConfirm();
+         UDR1 = '4';
          break;
       case 5: //Check serial interface
          drawHighlighter("5. Toggle main living room lights",134);
-
-         //highlight.top = 136;
-         //highlight.bottom = 139;
-
-         //blinkConfirm();
+         UDR1 = '5';
          break;
       case 6: //Options
          drawHighlighter("6. Options",149);
-         //highlight.top = 151;
-         //highlight.bottom = 154;
+         UDR1 = '6';
          break;
    }
+}
+
+ISR(USART_RXC_vect) {
+   char ReceivedByte;
+   ReceivedByte = UDR1;
+   printResponse(ReceivedByte);
+
 }
 
 int main(void) {
@@ -92,20 +90,56 @@ int main(void) {
    LED_INIT;
    init_lcd();
    init_rotary();
+   configureUSART();
 
    set_frame_rate_hz(61);
    EIMSK |= _BV(INT7);
    EIMSK |= _BV(INT4) | _BV(INT5);
-   //TCCR1A = 0;
-	//TCCR1B = _BV(WGM12);
-	//TCCR1B |= _BV(CS10);
-	//TIMSK1 |= _BV(OCIE1A);
    launchApplication();
 }
 
+/*
+ * Configure USART()
+ * Pulled from https://www.avrfreaks.net/forum/tut-soft-using-usart-interrupt-driven-serial-comms?page=all
+*/
+void configureUSART() {
+   uint16_t ubrr_value = 103;
+   UBRR1 = ubrr_value;
+   UCSR1B = (1<<RXEN1)|(1<<TXEN1);
+   UCSR1C = (1<<UCSZ10)|(1<<UCSZ11);
+}
+
+void printResponse(char response) {
+   switch(response) {
+      case '1':
+         clear_screen();
+         display_string_xy("Request Completed: 1", 100, 200);
+         break;
+      case '2':
+         clear_screen();
+         display_string_xy("Request Completed: 2", 90, 200);
+         break;
+      case '3':
+         clear_screen();
+         display_string_xy("Request Completed: 3", 90, 200);
+         break;
+      case '4':
+         clear_screen();
+         display_string_xy("Request Completed: 4", 90, 200);
+         break;
+      case '5':
+         clear_screen();
+         display_string_xy("Request Completed: 5", 90, 200);
+         break;
+      case '6':
+         clear_screen();
+         display_string_xy("Request Completed: 6", 90, 200);
+         break;
+   }
+}
+ 
 void toggleMenu() {
    clear_screen();
-   
    fill_rectangle(highlight, display.background);
    display_string_xy("Request Received", 100, 200);
    _delay_ms(500);
@@ -125,22 +159,24 @@ void mainMenu() {
    display_string_xy("6. Options", 60, 150);
 }
 
-
-
 void launchApplication() {
+   int flickerFix = 0;
    mainMenu();
    for(;;){
       sei();
-      if(get_middle() == 1) {
+      if(get_middle() == 1 && flickerFix == 0) {
          toggleMenu();
+         _delay_ms(25);
+         flickerFix = 1;
       }
+      flickerFix = 0;
    }
 }
 
-void blinkConfirm() {
-   for(int i = 0; i < 2; i++) {
+void blinkConfirm(int j) {
+   for(int i = 0; i < j; i++) {
       LED_ON;
-      _delay_ms(400);
+      _delay_ms(50);
       LED_OFF;
    }
 }
