@@ -39,7 +39,11 @@ volatile rectangle highlight;
 volatile int rotaryStore;
 volatile int changeState = 0;
 
+/*  */
+
 ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
+
+/*  */
 
 ISR(INT4_vect)
 {
@@ -50,7 +54,6 @@ ISR(INT4_vect)
       case 1: //Toggle main living room lights
          drawHighlighter("1. Toggle main living room lights",74);
          UDR1 = '1';
-
          break;
       case 2: //Toggle living room lampshade
          drawHighlighter("2. Toggle living room lampshade",89);
@@ -61,7 +64,7 @@ ISR(INT4_vect)
          UDR1 = '3';
          break;
       case 4: //Return energy usage today/cost
-         drawHighlighter("4. Return energy usage",119);
+         drawHighlighter("4. Toggle bedroom led lights",119);
          UDR1 = '4';
          break;
       case 5: //Check serial interface
@@ -71,9 +74,12 @@ ISR(INT4_vect)
       case 6: //Options
          drawHighlighter("6. Options",149);
          UDR1 = '6';
+         
          break;
    }
 }
+
+/*  */
 
 ISR(USART_RXC_vect) {
    char ReceivedByte;
@@ -81,6 +87,8 @@ ISR(USART_RXC_vect) {
    printResponse(ReceivedByte);
 
 }
+
+/*  */
 
 int main(void) {
 
@@ -102,12 +110,15 @@ int main(void) {
  * Configure USART()
  * Pulled from https://www.avrfreaks.net/forum/tut-soft-using-usart-interrupt-driven-serial-comms?page=all
 */
+
 void configureUSART() {
    uint16_t ubrr_value = 103;
    UBRR1 = ubrr_value;
    UCSR1B = (1<<RXEN1)|(1<<TXEN1);
    UCSR1C = (1<<UCSZ10)|(1<<UCSZ11);
 }
+
+/*  */
 
 void printResponse(char response) {
    switch(response) {
@@ -137,17 +148,22 @@ void printResponse(char response) {
          break;
    }
 }
+
+/*  */
  
 void toggleMenu() {
    clear_screen();
    fill_rectangle(highlight, display.background);
-   display_string_xy("Request Received", 100, 200);
+   display_string_xy("Request Received", 110, 200);
+   blinkConfirm(3);
    _delay_ms(500);
    clear_screen();
    changeState = 0;
    mainMenu();
 
 }
+
+/*  */
 
 void mainMenu() {
    display_string_xy("FortunaHome", 120, 20);
@@ -158,6 +174,8 @@ void mainMenu() {
    display_string_xy("5. Return total daily energy usage", 60, 135);
    display_string_xy("6. Options", 60, 150);
 }
+
+/*  */
 
 void launchApplication() {
    int flickerFix = 0;
@@ -173,6 +191,8 @@ void launchApplication() {
    }
 }
 
+/*  */
+
 void blinkConfirm(int j) {
    for(int i = 0; i < j; i++) {
       LED_ON;
@@ -181,17 +201,19 @@ void blinkConfirm(int j) {
    }
 }
 
+/*  */
+
 void drawHighlighter(char *inputText, uint16_t y) {
    
    fill_rectangle(highlight, display.background);
    
    long int stringLength = strlen(inputText);
-   uint16_t highlighterLength = (uint16_t) stringLength*(CHAR_X+2);
+   uint16_t highlighterLength = stringLength*(CHAR_X);
 
-   highlight.top = y+4+6;
-   highlight.bottom = y+5+6;
+   highlight.top = y+10;
+   highlight.bottom = y+11;
    highlight.left = 60;
-   highlight.right = highlighterLength;
+   highlight.right = 60+highlighterLength;
    fill_rectangle(highlight, RED);
 }
 
