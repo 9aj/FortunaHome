@@ -36,8 +36,6 @@ void toggleMenu();
 void mainMenu();
 
 volatile rectangle highlight;
-volatile int rotaryStore;
-volatile int changeState = 0;
 
 /*  
  * Make rotary encoder CCW motion an alias of CW
