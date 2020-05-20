@@ -39,11 +39,17 @@ volatile rectangle highlight;
 volatile int rotaryStore;
 volatile int changeState = 0;
 
-/*  */
+/*  
+ * Make rotary encoder CCW motion an alias of CW
+ */
 
 ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
 
-/*  */
+/* 
+ * Control rotary encoder
+ * Debounce at 500us
+ * Dependent on encoder state, highlight the selected option
+ */
 
 ISR(INT4_vect)
 {
@@ -79,7 +85,10 @@ ISR(INT4_vect)
    }
 }
 
-/*  */
+/* 
+ * On receiving a message (USART comms RX) 
+ * handle the GUI
+ */
 
 ISR(USART_RXC_vect) {
    char ReceivedByte;
@@ -88,7 +97,12 @@ ISR(USART_RXC_vect) {
 
 }
 
-/*  */
+/* 
+ * Main method, initialise the clock and prescaler
+ * Initialise, LCD, LED, ROTARY, USART
+ * Reduce screen tearing with FR=61
+ * Enable interrupts
+ */
 
 int main(void) {
 
@@ -118,7 +132,10 @@ void configureUSART() {
    UCSR1C = (1<<UCSZ10)|(1<<UCSZ11);
 }
 
-/*  */
+/* 
+ * USART returns a character response, representing a status code
+ * TODO: Yet to handle failiures
+ */
 
 void printResponse(char response) {
    switch(response) {
@@ -149,21 +166,27 @@ void printResponse(char response) {
    }
 }
 
-/*  */
+/* 
+ * Toggles Requests Screen
+ * Displays "Request Received" after sending a status character via USART
+ * Blinks the LED 'once'
+ */
  
 void toggleMenu() {
    clear_screen();
    fill_rectangle(highlight, display.background);
    display_string_xy("Request Received", 110, 200);
-   blinkConfirm(3);
+   blinkConfirm(1);
    _delay_ms(500);
    clear_screen();
-   changeState = 0;
    mainMenu();
 
 }
 
-/*  */
+/* 
+ * Main Menu
+ * A list of all options to be selected by the user
+ */
 
 void mainMenu() {
    display_string_xy("FortunaHome", 120, 20);
@@ -175,7 +198,12 @@ void mainMenu() {
    display_string_xy("6. Options", 60, 150);
 }
 
-/*  */
+/* 
+ * Launch FortunaHome
+ * Enable global interrupts
+ * BUTTON FIX, NOT USING INTERRUPT FOR NOW
+ ** include flickerFix, to stop the request received menu from being displayed twice
+ */
 
 void launchApplication() {
    int flickerFix = 0;
@@ -191,7 +219,9 @@ void launchApplication() {
    }
 }
 
-/*  */
+/* 
+ * Blink the LED a specified number of times using macros LED_ON/LED_OFF
+ */
 
 void blinkConfirm(int j) {
    for(int i = 0; i < j; i++) {
@@ -201,7 +231,11 @@ void blinkConfirm(int j) {
    }
 }
 
-/*  */
+/* 
+ * Draw the highlighter when selecting an option on the main menu
+ * Calculates the length of the string w.r.t to the display
+ * Displays the highlighter in RED underneath each string
+ */
 
 void drawHighlighter(char *inputText, uint16_t y) {
    
