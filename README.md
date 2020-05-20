@@ -1,6 +1,6 @@
 # FortunaHome
 
-FortunaHome is a simple application for the LaFortuna that controls basic applications connected to the device through its inbuilt USART
+FortunaHome is a basic application for the LaFortuna Microcontroller, that controls basic applications connected to the device through serial communications.
 
 ## Installation
 
