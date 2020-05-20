@@ -6,9 +6,11 @@ FortunaHome is a simple application for the LaFortuna that controls basic applic
 
 Requires GNU Make to install
 Connect the LaFortuna and enable S6 to flash.
-'''bash
+
+Navigate to the FortunaHome/FortunaHome/ directory
+```bash
 make
-'''
+```
 
 ## Usage
 Connect the serial port TX/RX connections to a USB.
